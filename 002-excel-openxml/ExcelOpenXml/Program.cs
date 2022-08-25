@@ -14,7 +14,7 @@ namespace ExcelOpenXml
     public class Program
     {
 
-        public static void Main()
+        public static async Task Main()
         {
             var host = new HostBuilder()
                 .ConfigureServices(services =>
@@ -28,7 +28,7 @@ namespace ExcelOpenXml
             try
             {
                 var excelMetadata = host.Services.GetRequiredService<ExcelMetadata>();
-                var (app, core) = excelMetadata.ProcessExcelAsync().GetAwaiter().GetResult();
+                var (app, core) = await excelMetadata.ProcessExcelAsync();
                 Console.WriteLine ("Author: {0}", core?.Creator);
                 Console.WriteLine ("Created: {0}", core?.Created);
                 Console.WriteLine ("Last Modified: {0}", core?.Modified);
