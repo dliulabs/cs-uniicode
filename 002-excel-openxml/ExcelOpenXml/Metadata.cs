@@ -17,9 +17,13 @@ namespace ExcelOpenXml
         private readonly IHttpClientFactory _httpClientFactory;
         public ExcelMetadata(IHttpClientFactory httpClientFactory) =>
             _httpClientFactory = httpClientFactory;
-        public async Task<Properties?> ProcessExcelAsync()
+        // public async Task<Properties?> ProcessExcelAsync()
+        public async Task<(Properties? p, CoreProperties? c)> ProcessExcelAsync()
         {
             var httpClient = _httpClientFactory.CreateClient();
+            Properties? p = null;
+            CoreProperties? c = null;
+
             using (var request = new HttpRequestMessage(HttpMethod.Get, new Uri(url)))
             {
                 // add Content, Headers, etc to request
@@ -31,12 +35,25 @@ namespace ExcelOpenXml
 
                 foreach (var entry in archive.Entries)
                 {
-                    if (entry.FullName == "docProps/app.xml")
-                        using (var xmlStream = entry.Open()) {
-                            return ProcessStream(xmlStream);
-                        }
+                    switch (entry.FullName)
+                    {
+                        case "docProps/core.xml":
+                            using (var xmlStream = entry.Open())
+                            {
+                                c = ProcessCore(xmlStream);
+                            }
+                            break;
+                        case "docProps/app.xml":
+                            using (var xmlStream = entry.Open())
+                            {
+                                p = ProcessApp(xmlStream);
+                            }
+                            break;
+                        default:
+                            break;
+                    }
                 }
-                return null;
+                return (p, c);
             }
 
         }
@@ -59,7 +76,18 @@ namespace ExcelOpenXml
             return stringBuilder.ToString();
         }
 
-        protected Properties? ProcessStream(Stream stream)
+        protected CoreProperties? ProcessCore(Stream stream)
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(CoreProperties));
+            serializer.UnknownNode += new XmlNodeEventHandler(serializer_UnknownNode);
+            serializer.UnknownAttribute += new XmlAttributeEventHandler(serializer_UnknownAttribute);
+
+            // Declares an object variable of the type to be deserialized.
+            CoreProperties? core = serializer.Deserialize(stream) as CoreProperties;
+            return core;
+        }
+
+        protected Properties? ProcessApp(Stream stream)
         {
             XmlSerializer serializer = new XmlSerializer(typeof(Properties));
             serializer.UnknownNode += new XmlNodeEventHandler(serializer_UnknownNode);

@@ -28,8 +28,12 @@ namespace ExcelOpenXml
             try
             {
                 var excelMetadata = host.Services.GetRequiredService<ExcelMetadata>();
-                var result = excelMetadata.ProcessExcelAsync().GetAwaiter().GetResult();
-                Console.WriteLine ("Excel Version: {0}", result?.AppVersion);
+                var (app, core) = excelMetadata.ProcessExcelAsync().GetAwaiter().GetResult();
+                Console.WriteLine ("Author: {0}", core?.Creator);
+                Console.WriteLine ("Created: {0}", core?.Created);
+                Console.WriteLine ("Last Modified: {0}", core?.Modified);
+                Console.WriteLine ("Application: {0}", app?.Application);
+                Console.WriteLine ("App Version: {0}", app?.AppVersion);
             }
             catch (Exception ex)
             {
