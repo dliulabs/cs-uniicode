@@ -18,11 +18,11 @@ namespace ExcelOpenXml
         public ExcelMetadata(IHttpClientFactory httpClientFactory) =>
             _httpClientFactory = httpClientFactory;
         // public async Task<Properties?> ProcessExcelAsync()
-        public async Task<(Properties? p, CoreProperties? c)> ProcessExcelAsync()
+        public async Task<(Properties? app, CoreProperties? core)> ProcessExcelAsync()
         {
             var httpClient = _httpClientFactory.CreateClient();
-            Properties? p = null;
-            CoreProperties? c = null;
+            Properties? app = null;
+            CoreProperties? core = null;
 
             using (var request = new HttpRequestMessage(HttpMethod.Get, new Uri(url)))
             {
@@ -40,23 +40,23 @@ namespace ExcelOpenXml
                         case "docProps/core.xml":
                             using (var xmlStream = entry.Open())
                             {
-                                c = ProcessCore(xmlStream);
+                                core = ProcessCore(xmlStream);
                             }
                             break;
                         case "docProps/app.xml":
                             using (var xmlStream = entry.Open())
                             {
-                                p = ProcessApp(xmlStream);
+                                app = ProcessApp(xmlStream);
                             }
                             break;
                         default:
                             break;
                     }
                 }
-                return (p, c);
+                return (app, core);
             }
-
         }
+        
         static string PrettyXml(string xml)
         {
             var stringBuilder = new StringBuilder();
@@ -76,7 +76,7 @@ namespace ExcelOpenXml
             return stringBuilder.ToString();
         }
 
-        protected CoreProperties? ProcessCore(Stream stream)
+        static CoreProperties? ProcessCore(Stream stream)
         {
             XmlSerializer serializer = new XmlSerializer(typeof(CoreProperties));
             serializer.UnknownNode += new XmlNodeEventHandler(serializer_UnknownNode);
@@ -87,7 +87,7 @@ namespace ExcelOpenXml
             return core;
         }
 
-        protected Properties? ProcessApp(Stream stream)
+        static Properties? ProcessApp(Stream stream)
         {
             XmlSerializer serializer = new XmlSerializer(typeof(Properties));
             serializer.UnknownNode += new XmlNodeEventHandler(serializer_UnknownNode);
@@ -99,13 +99,13 @@ namespace ExcelOpenXml
             return app;
         }
 
-        protected void serializer_UnknownNode
+        static void serializer_UnknownNode
             (object? sender, XmlNodeEventArgs e)
         {
             Console.WriteLine("Unknown Node:" + e.Name + "\t" + e.Text);
         }
 
-        protected void serializer_UnknownAttribute
+        static void serializer_UnknownAttribute
             (object? sender, XmlAttributeEventArgs e)
         {
             System.Xml.XmlAttribute attr = e.Attr;
