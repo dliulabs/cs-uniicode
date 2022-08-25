@@ -30,8 +30,9 @@ namespace ExcelOpenXml
                 var excelMetadata = host.Services.GetRequiredService<ExcelMetadata>();
                 var (app, core) = await excelMetadata.ProcessExcelAsync();
                 Console.WriteLine ("Author: {0}", core?.Creator);
+                Console.WriteLine ("Last modified by: {0}", core?.LastModifiedBy);
                 Console.WriteLine ("Created: {0}", core?.Created);
-                Console.WriteLine ("Last Modified: {0}", core?.Modified);
+                Console.WriteLine ("Last modified: {0}", core?.Modified);
                 Console.WriteLine ("Application: {0}", app?.Application);
                 Console.WriteLine ("App Version: {0}", app?.AppVersion);
             }
