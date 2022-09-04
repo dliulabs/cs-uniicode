@@ -38,16 +38,16 @@ namespace ExcelParsing
             {
                 using (SpreadsheetDocument doc = SpreadsheetDocument.Open(stream, false))
                 {
-                    WorkbookPart workbookPart = doc.WorkbookPart;
-                    SharedStringTablePart sstpart = workbookPart.GetPartsOfType<SharedStringTablePart>().First();
-                    SharedStringTable sst = sstpart.SharedStringTable;
+                    WorkbookPart? workbookPart = doc.WorkbookPart;
+                    SharedStringTablePart? sstpart = workbookPart?.GetPartsOfType<SharedStringTablePart>()?.First();
+                    SharedStringTable? sst = sstpart?.SharedStringTable;
 
-                    WorksheetPart worksheetPart = workbookPart.WorksheetParts.First();
-                    Worksheet sheet = worksheetPart.Worksheet;
+                    WorksheetPart? worksheetPart = workbookPart?.WorksheetParts.First();
+                    Worksheet? sheet = worksheetPart?.Worksheet;
 
-                    var cells = sheet.Descendants<Cell>();
-                    var rows = sheet.Descendants<Row>();
-
+                    var cells = sheet?.Descendants<Cell>();
+                    var rows = sheet?.Descendants<Row>();
+                    if (rows is null) return;
 
                     foreach (Row row in rows)
                     {
@@ -55,9 +55,13 @@ namespace ExcelParsing
                         {
                             if ((c.DataType != null) && (c.DataType == CellValues.SharedString))
                             {
-                                int ssid = int.Parse(c.CellValue.Text);
-                                string str = sst.ChildElements[ssid].InnerText;
-                                Console.Write("{0}\t", str);
+                                int ssid;
+                                bool success = int.TryParse(c?.CellValue?.Text, out ssid);
+                                if (success)
+                                {
+                                    string? str = sst?.ChildElements[ssid]?.InnerText;
+                                    Console.Write("{0}\t", str);
+                                }
                             }
                             else if (c.CellValue != null)
                             {
@@ -69,35 +73,23 @@ namespace ExcelParsing
                 }
             }
         }
-        private static int CellReferenceToIndex(Cell cell)
-        {
-            int index = 0;
-            string reference = cell.CellReference.ToString().ToUpper();
-            foreach (char ch in reference)
-            {
-                if (Char.IsLetter(ch))
-                {
-                    int value = (int)ch - (int)'A';
-                    index = (index == 0) ? value : ((index + 1) * 26) + value;
-                }
-                else
-                    return index;
-            }
-            return index;
-        }
 
-        private static String GetCellValue(Cell cell, SharedStringTablePart stringTablePart)
+        private static String? GetCellValue(Cell cell, SharedStringTablePart stringTablePart)
         {
-            if (cell.ChildElements.Count == 0)
+            if ((cell is null) || (cell.ChildElements.Count == 0))
                 return null;
-            //get cell value
-            String value = cell.CellValue.InnerText;
-            //Look up real value from shared string table
+
+            String? value = cell.CellValue?.InnerText;
             if ((cell.DataType != null) && (cell.DataType == CellValues.SharedString))
-                value = stringTablePart
-                    .SharedStringTable
-                    .ChildElements[Int32.Parse(value)]
-                    .InnerText;
+            {
+                Int32 iValue;
+                bool success = Int32.TryParse(value, out iValue);
+                if (success) 
+                    value = stringTablePart
+                        .SharedStringTable
+                        .ChildElements[iValue]
+                        .InnerText;
+            }
             return value;
         }
     }
