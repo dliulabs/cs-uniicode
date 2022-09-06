@@ -12,11 +12,11 @@ using System.Globalization;
 
 namespace ExcelParsing
 {
-    public class SaxParsing
+    public class DomParsing
     {
         private static readonly string url = "https://download.microsoft.com/download/1/4/E/14EDED28-6C58-4055-A65C-23B4DA81C4DE/Financial%20Sample.xlsx";
         private readonly IHttpClientFactory _httpClientFactory;
-        public SaxParsing(IHttpClientFactory httpClientFactory) => _httpClientFactory = httpClientFactory;
+        public DomParsing(IHttpClientFactory httpClientFactory) => _httpClientFactory = httpClientFactory;
 
         public async Task ProcessExcelAsync()
         {

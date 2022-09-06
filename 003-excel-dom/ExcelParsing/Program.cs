@@ -18,19 +18,19 @@ namespace ExcelParsing
                 .ConfigureServices(services =>
                 {
                     services.AddHttpClient(); 
-                    services.AddTransient<SaxParsing>();
+                    services.AddTransient<DomParsing>();
                 })
                 .Build();
             
              try
             {
-                var excelParsing = host.Services.GetRequiredService<SaxParsing>();
+                var excelParsing = host.Services.GetRequiredService<DomParsing>();
                 await excelParsing.ProcessExcelAsync();
             }
             catch (Exception ex)
             {
                 host.Services.GetRequiredService<ILogger<Program>>()
-                    .LogError(ex, "Unable to load branches from GitHub.");
+                    .LogError(ex, "Unable to load required service.");
             }
         }
     }
