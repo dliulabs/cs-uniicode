@@ -11,7 +11,7 @@ dotnet run
 
 Parsing the Core & App Properties of an Excel Workbook
 
-## Lab 03: Paring Excel using OpenXml DOM approach
+## Lab 03: Parsing Excel using OpenXml DOM approach
 
 ## Lab 04: Parsing Excel using OpenXml SAX approach
 
