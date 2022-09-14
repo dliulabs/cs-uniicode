@@ -54,7 +54,7 @@ namespace MvcMovie.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .IsUnicode(true)
-                        .HasColumnType("nvarchar(100)")
+                        .HasColumnType("varchar(100)")
                         .UseCollation("Latin1_General_100_BIN2_UTF8");
 
                     b.HasKey("Id");
