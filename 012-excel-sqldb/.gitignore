@@ -1,0 +1,6 @@
+**/*.xlsx
+**/bin/
+**/obj/
+**/appsettings.json
+**/efbundle*
+**/*.csv
