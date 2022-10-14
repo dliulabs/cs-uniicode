@@ -15,14 +15,13 @@ using DocumentFormat.OpenXml.Spreadsheet;
 namespace Excel2Ndjson;
 public class SAXParsing
 {
-    public record Data(int Id = default, string Column1 = null, string Column2 = null);
     private static readonly string url = "https://dliustorage0001.blob.core.windows.net/container1/13_400k_6_20221013120444350.xlsx?sp=r&st=2022-10-13T20:31:45Z&se=2023-10-01T04:31:45Z&spr=https&sv=2021-06-08&sr=b&sig=9ZNQxmeyxhLkTGEyUNJr9Iqp4eCZKc1jEJapoT9VLBg%3D";
 
     private readonly IHttpClientFactory _httpClientFactory;
     public SAXParsing(IHttpClientFactory httpClientFactory) => _httpClientFactory = httpClientFactory;
     private static readonly byte[] _newlineDelimiter = Encoding.UTF8.GetBytes("\n");
 
-    public async Task<DataTable> ProcessExcelAsync()
+    public async Task<DataTable> ProcessExcelAsync2()
     {
         var filepath = "./Test.xlsx";
         using (var stream = System.IO.File.OpenRead(filepath))
@@ -31,7 +30,7 @@ public class SAXParsing
             return dt;
         }
     }
-    public async Task<DataTable> ProcessExcelAsync2()
+    public async Task<DataTable> ProcessExcelAsync()
     {
         var httpClient = _httpClientFactory.CreateClient();
 
@@ -47,10 +46,16 @@ public class SAXParsing
         }
     }
 
+    //public record Data(int Id = default, string Column1 = null, string Column2 = null);
+    public record KeyValue(string key, string value);
+
     private DataTable Excel2DataTable(Stream stream)
     {
         var dt = new DataTable();
         var skipRows = 0;
+        var col = 0;
+        List<KeyValue> header = new List<KeyValue>();
+        
         using (SpreadsheetDocument document = SpreadsheetDocument.Open(stream, false))
         {
             WorkbookPart? workbookPart = document.WorkbookPart;
@@ -63,13 +68,14 @@ public class SAXParsing
             //row counter
             int rcnt = 0;
 
-            using (TextWriter writer = new StreamWriter(@"Output.csv", false, System.Text.Encoding.UTF8))
+            using (TextWriter writer = new StreamWriter(@"Output.ndjson", false, System.Text.Encoding.UTF8))
             {
-                var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+                // var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
                 while (reader.Read())
                 {
                     if (reader.ElementType == typeof(Row))
                     {
+                        List<KeyValue> data = new List<KeyValue>();
                         // DataRow tempRow = dt.NewRow();
                         //if row has attribute means it is not a empty row
                         if (reader.HasAttributes)
@@ -93,22 +99,24 @@ public class SAXParsing
                                     {
                                         // dt.Columns.Add(cellValue);
                                         // dt.Columns.Add(c.CellReference); // A1, B1, etc.
-                                        csv.WriteField (cellValue);
-                                        Console.WriteLine("Header {0}: {1}\t{2}", actualCellIndex, cellValue, c.CellReference);
+                                        // csv.WriteField (cellValue);
+                                        header.Add(new KeyValue(c.CellReference, cellValue ));
+                                        Console.WriteLine("Header {0}: {1}\t{2}", col, cellValue, c.CellReference);
                                     }
                                     else if (rcnt >= skipRows)
                                     {
                                         // instead of tempRow[c.CellReference] = cellValue;
                                         // tempRow[actualCellIndex] = cellValue;
-                                        csv.WriteField (cellValue);
+                                        // csv.WriteField (cellValue);
+                                        data.Add(new KeyValue(c.CellReference, cellValue ));
                                         // Console.Write ("{0}\t", cellValue);
                                     }
-
+                                    col++;
                                 }
                             }
                             while (reader.ReadNextSibling());
                             // if its not the header row so append rowdata to the datatable
-                            if (rcnt == skipRows) csv.NextRecord();
+                            // if (rcnt == skipRows) csv.NextRecord();
                             if (rcnt > skipRows)
                             {
                                 //var str = JsonConvert.SerializeObject(tempRow, Formatting.None);
@@ -120,10 +128,11 @@ public class SAXParsing
                                         Column2 = tempRow[2].ToString(),
                                     },
                                     Formatting.None
-                                );
-                                writer.WriteLine(str); */
+                                );*/
+                                var str = JsonConvert.SerializeObject(new {id = rcnt, data= data.Select(r => r.value).ToArray()});
+                                writer.WriteLine(str); 
                                 // dt.Rows.Add (tempRow);
-                                csv.NextRecord ();
+                                // csv.NextRecord ();
                                 // Console.WriteLine ();
                             }
                             rcnt++;
